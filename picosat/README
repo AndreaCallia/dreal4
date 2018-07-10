@@ -1,1 +1,5 @@
-/data/home_.cache_bazel/_bazel_ac4014/00f7ea047bd23a9ce555901dbf089c2e/external/picosat/README
+These are the sources of the PicoSAT solver.
+The preprocessor is not included.
+To compile run './configure.sh && make'.
+The API is document in 'picosat.h'.
+See also 'NEWS' and 'LICENSE'.

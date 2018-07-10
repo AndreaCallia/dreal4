@@ -1,1 +1,14 @@
-/data/home_.cache_bazel/_bazel_ac4014/00f7ea047bd23a9ce555901dbf089c2e/external/picosat/version.c
+#include "config.h"
+
+const char *
+picosat_version (void)
+{
+  return PICOSAT_VERSION;
+}
+
+const char *
+picosat_config (void)
+{
+  return PICOSAT_CC " " PICOSAT_CFLAGS;
+}
+

@@ -1,1 +1,10 @@
-/data/home_.cache_bazel/_bazel_ac4014/00f7ea047bd23a9ce555901dbf089c2e/external/picosat/BUILD
+# -*- python -*-
+# This file contains rules for Bazel; see https://bazel.io/ .
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "picosat",
+    srcs = ["picosat.c"],
+    hdrs = ["picosat.h"],
+)

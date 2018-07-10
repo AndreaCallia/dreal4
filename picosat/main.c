@@ -1,1 +1,7 @@
-/data/home_.cache_bazel/_bazel_ac4014/00f7ea047bd23a9ce555901dbf089c2e/external/picosat/main.c
+int picosat_main (int, char **);
+
+int
+main (int argc, char **argv)
+{
+  return picosat_main (argc, argv);
+}
