@@ -79,9 +79,10 @@ bool ParseBooleanOption(const string& key, const string& val) {
 }
 }  // namespace
 
-Context::Impl::Impl() : Impl{Config{}} {}
+Context::Impl::Impl() : Impl{Config{}} {sat_solver_ = new SatSolver;}
 
 Context::Impl::Impl(Config config) : config_{config}, theory_solver_{config_} {
+  sat_solver_ = new SatSolver;
   boxes_.push_back(Box{});
 }
 
@@ -176,7 +177,7 @@ optional<Box> Context::Impl::CheckSatCore(const ScopedVector<Formula>& stack,
 }
 
 optional<Box> Context::Impl::CheckSat() {
-  auto result = CheckSatCore(stack_, box(), &sat_solver_);
+  auto result = CheckSatCore(stack_, box(), sat_solver_);
   if (result) {
     // In case of delta-sat, do post-processing.
     Tighten(&(*result), config_.precision());
@@ -285,12 +286,12 @@ void Context::Impl::Pop() {
   DREAL_LOG_DEBUG("ContextImpl::Pop()");
   stack_.pop();
   boxes_.pop();
-  sat_solver_.Pop();
+  sat_solver_->Pop();
 }
 
 void Context::Impl::Push() {
   DREAL_LOG_DEBUG("ContextImpl::Push()");
-  sat_solver_.Push();
+  sat_solver_->Push();
   boxes_.push();
   boxes_.push_back(boxes_.last());
   stack_.push();
@@ -353,6 +354,14 @@ void Context::Impl::SetOption(const string& key, const string& val) {
         ParseBooleanOption(key, val));
   }
 }
+
+void  Context::Impl::SetSatSolver(SatSolver *solver) {
+  sat_solver_ = solver;
+}
+
+SatSolver* Context::Impl::GetSatSolver() {
+  return sat_solver_;
+};
 
 Box Context::Impl::ExtractModel(const Box& box) const {
   if (static_cast<int>(model_variables_.size()) == box.size()) {

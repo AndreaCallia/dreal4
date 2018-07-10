@@ -1,6 +1,7 @@
 #include "dreal/solver/sat_solver.h"
 
 #include <ostream>
+#include <sstream>
 
 #include "dreal/util/assert.h"
 #include "dreal/util/exception.h"
@@ -17,14 +18,178 @@ using std::vector;
 SatSolver::SatSolver() : sat_{picosat_init()} {
   // Enable partial checks via picosat_deref_partial. See the call-site in
   // SatSolver::CheckSat().
+  this->lemma_push = nullptr;
+  this->lemma_pull = nullptr;
   picosat_save_original_clauses(sat_);
 }
+
+/*
+SatSolver::SatSolver(void (*lemma_push)(vector<string> &clauses), void (*lemma_pull)(vector<string> &clauses)) : sat_{picosat_init()} {
+    // set_lemma_push(sat_, lemma_push);
+    // set_lemma_pull(sat_, lemma_pull);
+
+    //picosat_save_original_clauses(sat_);
+    this->lemma_push = lemma_push;
+    this->lemma_pull = lemma_pull;
+}
+ */
+
 
 SatSolver::SatSolver(const vector<Formula>& clauses) : SatSolver{} {
   AddClauses(clauses);
 }
 
 SatSolver::~SatSolver() { picosat_reset(sat_); }
+
+  SatSolver* tramp_SatSolver_ptr = nullptr;
+
+  size_t SatSolver::SatVarToId(int x) {
+    //if (x < 0) return -(sat_var_to_id_[-x]);
+    return /*static_cast<int>*/(sat_var_to_id_[x]);
+  }
+
+  size_t TrampSatVarToId(int x) {
+    return tramp_SatSolver_ptr->SatVarToId(x); //
+  }
+
+  int SatSolver::IdToSatVar(size_t x) {
+    //if (x < 0) return -(id_to_sat_var_[-x]);
+    return id_to_sat_var_[x];
+  }
+
+  int TrampIdToSatVar(size_t x) {
+    return tramp_SatSolver_ptr->IdToSatVar(x);
+  }
+
+  const char* SatSolver::SatVarToStr(int x) {
+    if (x < 0) return ("-" + to_sym_var_[-x].get_name()).c_str();
+    return to_sym_var_[x].get_name().c_str();
+  }
+
+  const char* TrampSatVarToStr(int x) {
+    return tramp_SatSolver_ptr->SatVarToStr(x);
+  }
+
+  int SatSolver::StrToSatVar(const char* x) {
+    return str_to_sat_var_[x];
+  }
+
+  int TrampStrToSatVar(const char* x) {
+    return tramp_SatSolver_ptr->StrToSatVar(x);
+  }
+
+  void SatSolver::SmtsAddLearnedClause(char* c) {
+    sent_clauses[c] = false;
+  }
+
+  void TrampSmtsAddLearnedClause(char* c) {
+    return tramp_SatSolver_ptr->SmtsAddLearnedClause(c);
+  }
+
+  /*
+
+    void SatSolver::pull(PicoSAT* s){
+  if (smts mi ha dato il callback smts_pull){
+    vector<string> clauses_from_others;
+    smts_pull(clauses_from_ohters);  // in smts: void smts_pull(vector<string>&v)
+        for (string clause : clauses_from_others){
+          //metti clause in s
+        }
+  }
+}
+
+*/
+
+
+  void SatSolver::DoSmtsPull(PicoSAT* ps /*, const char*** result*/) {
+    //vector<const char*> resultvector;
+    if (lemma_pull) {
+      vector<string> clauses_from_others;
+      lemma_pull(clauses_from_others);
+      for (string clause: clauses_from_others) {
+        char* clausecharptr = strdup(clause.c_str());
+        if ((sent_clauses.find(clausecharptr) == sent_clauses.end())
+            && (received_clauses.find(clause) == received_clauses.end())) {
+          //resultvector.push_back(clause.c_str());
+          stringstream iss(clause);
+          int lit;
+          while (iss>>lit) {
+            if (lit == 0) picosat_add(ps, 0);
+            else if (lit > 0) picosat_add(ps, id_to_sat_var_[lit]);
+            else picosat_add(ps, -id_to_sat_var_[-lit]);
+          }
+          received_clauses.insert(clause);
+        }
+        free(clausecharptr);
+      }
+      //*result = &resultvector[0];
+      //return resultvector.size();
+    }
+  }
+
+  void TrampDoSmtsPull(PicoSAT* ps) {
+    tramp_SatSolver_ptr->DoSmtsPull(ps);
+  }
+
+  /*
+
+  void SatSolver::push(PicoSAT* s){
+    if (smts mi ha dato il callback smts_push){
+      vector<string> my_clauses;
+      for (clause in s){
+        if (ho gia mandato clause in precedenza)
+        continue;
+        string str = string_representation(clasue);
+        my_clauses.push_back(str)
+      }
+      smts_push(my_clauses);
+    }
+  }
+
+  */
+
+  void SatSolver::DoSmtsPush() {
+    if (lemma_push) {
+      vector<string> my_clauses;
+      for (auto it = sent_clauses.cbegin(); it != sent_clauses.cend(); ++it) {
+        string clausestr(it->first);
+        if ((it->second) || (received_clauses.find(clausestr)) != received_clauses.end()) {
+          //DEBUG: cout << "Skipping a clause as it was already sent: " << it->first << endl;
+          continue;} //Meaning: If it has already been sent/received, don't send it again
+        string clstring(it->first);
+        my_clauses.push_back(clstring);
+        sent_clauses[it->first] = true; //Meaning: Set the clause as sent
+      }
+      lemma_push(my_clauses);
+    }
+  }
+
+  void TrampDoSmtsPush() {
+    tramp_SatSolver_ptr->DoSmtsPush();
+  }
+
+  void SatSolver::PrintLearnedClauses() {
+    cout << "LIST OF LEARNED CLAUSES:" << endl;
+    auto myMap = sent_clauses;
+    int i = 0;
+    //for(auto it = myMap.cbegin(); it != myMap.cend(); ++it)
+    for(auto it = myMap.cbegin(); (i<10) && (it != myMap.cend()); ++i)
+    {
+      std::cout << it->first << " " << it->second << true << false << "\n";
+      ++it;
+    }
+  }
+
+// void SatSolver::SetCallbacks(void (*lemma_push)(vector<string> &clauses), void (*lemma_pull)(vector<string> &clauses))
+void SatSolver::SetSmtsCallbacks(function<void(vector<string> &)> lemma_push, function<void(vector<string> &)> lemma_pull)
+{
+    this->lemma_push = lemma_push;
+    this->lemma_pull = lemma_pull;
+
+    tramp_SatSolver_ptr = this;
+    picosat_set_smts_callbacks(getPicosat(), TrampDoSmtsPush, TrampDoSmtsPull, TrampSatVarToId, TrampIdToSatVar, TrampSatVarToStr, TrampStrToSatVar, TrampSmtsAddLearnedClause);
+}
+
 
 void SatSolver::AddFormula(const Formula& f) {
   DREAL_LOG_DEBUG("SatSolver::AddFormula({})", f);
@@ -89,12 +254,27 @@ class SatSolverStat : public Stat {
 }  // namespace
 
 std::experimental::optional<SatSolver::Model> SatSolver::CheckSat() {
+  /*DEBUG
+  cout << "VALUES OF MAP:" << endl;
+  auto myMap = sat_var_to_id_;
+  for(auto it = myMap.cbegin(); it != myMap.cend(); ++it)
+  {
+    std::cout << it->first << " " << it->second << "\n";
+  }
+   */
   static SatSolverStat stat{DREAL_LOG_INFO_ENABLED};
   DREAL_LOG_DEBUG("SatSolver::CheckSat(#vars = {}, #clauses = {})",
                   picosat_variables(sat_),
                   picosat_added_original_clauses(sat_));
   stat.num_check_sat_++;
   // Call SAT solver.
+  // auto pull=[&](PicoSAT* s){
+  //  this->pull(s);
+  // };
+  // auto push=[&](PicoSAT* s){
+  //    this->push(s);
+  //};
+  // const int ret{picosat_sat(sat_, -1, pull, push)};
   const int ret{picosat_sat(sat_, -1)};
   Model model;
   auto& boolean_model = model.first;
@@ -187,8 +367,24 @@ void SatSolver::MakeSatVar(const Variable& var) {
   }
   // It's not in the maps, let's make one and add it.
   const int sat_var{picosat_inc_max_var(sat_)};
+
+  SMTS_id_count++;
+
+  //printf("Assigning ID %lu (sat_var %d) to variable %s\n", SMTS_id_count, sat_var, var.get_name().c_str());
+
   to_sat_var_.emplace_hint(it, var, sat_var);
+  //id_to_sat_var_.emplace(SMTS_id_count, sat_var);
+  id_to_sat_var_.emplace(var.get_id(), sat_var);
+  //sat_var_to_id_.emplace(sat_var, SMTS_id_count);
+  sat_var_to_id_.emplace(sat_var, var.get_id());
+  str_to_sat_var_.emplace(var.get_name().c_str(), sat_var);
   to_sym_var_.emplace(sat_var, var);
+
   DREAL_LOG_DEBUG("SatSolver::MakeSatVar({} ↦ {})", var, sat_var);
 }
+
+PicoSAT* SatSolver::getPicosat() {
+  return sat_;
+}
+
 }  // namespace dreal

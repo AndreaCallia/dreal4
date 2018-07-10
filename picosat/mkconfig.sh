@@ -1,0 +1,1 @@
+/data/home_.cache_bazel/_bazel_ac4014/00f7ea047bd23a9ce555901dbf089c2e/external/picosat/mkconfig.sh

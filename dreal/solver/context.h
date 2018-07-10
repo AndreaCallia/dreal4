@@ -13,6 +13,7 @@
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/util/box.h"
 #include "dreal/version.h"
+#include "dreal/solver/sat_solver.h"
 
 namespace dreal {
 
@@ -32,7 +33,7 @@ class Context {
   Context(Context&& context) noexcept;
 
   /// Destructor (Defaulted in .cc file. Needed here for compilation).
-  ~Context();
+  virtual ~Context();
 
   /// Deleted copy-assign.
   Context& operator=(const Context&) = delete;
@@ -98,6 +99,10 @@ class Context {
   /// Sets an option @p key with a value @p val.
   void SetOption(const std::string& key, const std::string& val);
 
+  void SetSatSolver(SatSolver *solver);
+
+  SatSolver* GetSatSolver();
+
   /// Returns a const reference of configuration.
   const Config& config() const;
 
@@ -114,5 +119,6 @@ class Context {
   class Impl;
 
   std::unique_ptr<Impl> impl_;
+
 };
 }  // namespace dreal

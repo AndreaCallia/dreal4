@@ -17,6 +17,7 @@ namespace dreal {
 class Context::Impl {
  public:
   Impl();
+  Impl(SatSolver *s) : Impl() {sat_solver_ = s;}
   explicit Impl(Config config);
   Impl(const Impl&) = delete;
   Impl(Impl&&) = delete;
@@ -37,6 +38,8 @@ class Context::Impl {
   void SetLogic(const Logic& logic);
   void SetOption(const std::string& key, double val);
   void SetOption(const std::string& key, const std::string& val);
+  void SetSatSolver(SatSolver *solver);
+  SatSolver* GetSatSolver();
   const Config& config() const { return config_; }
   Config& mutable_config() { return config_; }
 
@@ -75,7 +78,7 @@ class Context::Impl {
   ScopedVector<Box> boxes_;
   // Stack of asserted formulas.
   ScopedVector<Formula> stack_;
-  SatSolver sat_solver_;
+  SatSolver* sat_solver_;
   std::unordered_set<Variable::Id> model_variables_;
   TheorySolver theory_solver_;
 };

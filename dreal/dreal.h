@@ -6,5 +6,6 @@
 #include "dreal/smt2/logic.h"
 #include "dreal/solver/config.h"
 #include "dreal/solver/context.h"
+#include "dreal/solver/sat_solver.h"
 #include "dreal/symbolic/symbolic.h"
 #include "dreal/util/box.h"

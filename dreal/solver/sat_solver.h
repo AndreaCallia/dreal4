@@ -14,6 +14,8 @@
 #include "dreal/util/predicate_abstractor.h"
 #include "dreal/util/tseitin_cnfizer.h"
 
+using namespace std;
+
 namespace dreal {
 
 class SatSolver {
@@ -25,6 +27,8 @@ class SatSolver {
 
   /// Constructs a SatSolver.
   SatSolver();
+
+  //SatSolver(void (*smts_push)(vector<string> &clauses), void (*smts_pull)(vector<string> &clauses));
 
   /// Constructs a SatSolver while asserting @p clauses.
   explicit SatSolver(const std::vector<Formula>& clauses);
@@ -41,7 +45,7 @@ class SatSolver {
   /// Deleted move-assignment operator.
   SatSolver& operator=(SatSolver&&) = delete;
 
-  ~SatSolver();
+  virtual ~SatSolver();
 
   /// Adds a formula @p f to the solver.
   ///
@@ -71,6 +75,25 @@ class SatSolver {
   Formula theory_literal(const Variable& var) const {
     return predicate_abstractor_[var];
   }
+
+  PicoSAT* getPicosat();
+
+  //void SetCallbacks(void (*lemma_push)(vector<string> &clauses), void (*lemma_pull)(vector<string> &clauses));
+  void SetSmtsCallbacks(function<void(vector<string> &)> lemma_push, function<void(vector<string> &)> lemma_pull);
+
+  void DoSmtsPush();
+
+  void DoSmtsPull(PicoSAT* /*, const char*** */);
+
+  size_t SatVarToId(int x);
+  int IdToSatVar(size_t x);
+  const char* SatVarToStr(int x);
+  int StrToSatVar(const char* x);
+  void SmtsAddLearnedClause(char* x);
+  void PrintLearnedClauses();
+
+  function<void(vector<string> &)> lemma_push;
+  function<void(vector<string> &)> lemma_pull;
 
  private:
   // Adds a formula @p f to the solver.
@@ -111,9 +134,32 @@ class SatSolver {
   // Map int (Variable type in PicoSat) → symbolic::Variable.
   std::unordered_map<int, Variable> to_sym_var_;
 
+  // Map symbolic ID → int (Variable type in PicoSat).
+  std::unordered_map<size_t, int> id_to_sat_var_;
+
+  // Map int (Variable type in PicoSat) → symbolic ID.
+  std::unordered_map<int, size_t> sat_var_to_id_;
+
+  // Map symbolic name → int (Variable type in PicoSat).
+  std::unordered_map<const char*, int> str_to_sat_var_;
+
+  size_t SMTS_id_count = 0;
+
   /// Set of temporary Boolean variables introduced by Tseitin
   /// transformations.
   std::unordered_set<Variable, hash_value<Variable>> tseitin_variables_;
+
+  // void new_clause_event_handler();
+
+  //void (*lemma_push)(vector<string> &clauses);
+  //void (*lemma_pull)(vector<string> &clauses);
+
+  //function<char*(int &)> ToSymVar;
+  //function<int(char*)> ToSatVar;
+
+  std::map<char*, bool> sent_clauses;
+  std::set<string> received_clauses;
+
 };
 
 }  // namespace dreal

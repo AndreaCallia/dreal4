@@ -92,6 +92,14 @@ void Context::SetOption(const string& key, const string& val) {
   impl_->SetOption(key, val);
 }
 
+void Context::SetSatSolver(SatSolver *solver) {
+  impl_->SetSatSolver(solver);
+}
+
+SatSolver* Context::GetSatSolver() {
+  return impl_->GetSatSolver();
+}
+
 const Config& Context::config() const { return impl_->config(); }
 Config& Context::mutable_config() { return impl_->mutable_config(); }
 
