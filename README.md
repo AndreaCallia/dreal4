@@ -1,3 +1,7 @@
+##Note
+To create CMakeLists.txt:
+./bazel2cmakelists --target //...
+
 dReal: An SMT Solver for Nonlinear Theories of Reals
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
