@@ -1110,7 +1110,7 @@ size_t numlen(size_t num)
   return n;
 }
 
-static size_t printlits (PS * ps, Lit ** l, Lit ** end, FILE * out) {
+static size_t printlits (PS * ps, Lit ** l, Lit ** end, char * out) {
     int first;
     Lit ** p;
 
@@ -1124,13 +1124,13 @@ static size_t printlits (PS * ps, Lit ** l, Lit ** end, FILE * out) {
     {
         char sign_l0[2] = "";
         if (LIT2INT (l[0]) < 0) {sign_l0[0] = '-'; sign_l0[1] = '\0';}
-        if (out) fputs(sign_l0, out);
+        if (out) sprintf(out, "%s", sign_l0);
         length += strlen(sign_l0);
-        //if (out) fprintf (out, "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[0])));
+        //if (out) sprintf (out, "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[0])));
         //length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (l[0]))) + 1;
-        //DEBUG: if (out) fprintf (out, "{%lu}", ps->dreal_sat_var_to_id(LIT2IDX (l[0])));
+        //DEBUG: if (out) sprintf (out, "{%lu}", ps->dreal_sat_var_to_id(LIT2IDX (l[0])));
         //DEBUG: length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (l[0]))) + 2;
-        if (out) fprintf (out, "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[0])));
+        if (out) sprintf (out, "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[0])));
         length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (l[0]))) + 1;
     }
     else
@@ -1139,44 +1139,44 @@ static size_t printlits (PS * ps, Lit ** l, Lit ** end, FILE * out) {
         first = (abs (LIT2INT (l[0])) > abs (LIT2INT (l[1])));
         char sign_lf[2] = "";
         if (LIT2INT (l[first]) < 0) {sign_lf[0] = '-'; sign_lf[1] = '\0';}
-        if (out) fputs(sign_lf, out);
+        if (out) sprintf(out, "%s", sign_lf);
         length += strlen(sign_lf);
-        //if (out) fprintf (out, "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[first])));
+        //if (out) sprintf (out, "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[first])));
         //length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (l[first]))) + 1;
-        if (out) fprintf (out, "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[first])));
+        if (out) sprintf (out, "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[first])));
         length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (l[first]))) + 1;
         char sign_lnf[2] = "";
         if (LIT2INT (l[!first]) < 0) {sign_lnf[0] = '-'; sign_lnf[1] = '\0';}
-        if (out) fputs(sign_lnf, out);
+        if (out) sprintf(out, "%s", sign_lnf);
         length += strlen(sign_lnf);
-        //if (out) fprintf (out, "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[!first])));
+        //if (out) sprintf (out, "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[!first])));
         //length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (l[!first]))) + 1;
-        if (out) fprintf (out, "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[!first])));
+        if (out) sprintf (out, "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[!first])));
         length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (l[!first]))) + 1;
         for (p = l + 2; p < end; p++) {
           char sign_lp[2] = "";
           if (LIT2INT (*p) < 0) {sign_lp[0] = '-'; sign_lp[1] = '\0';}
-          if (out) fputs(sign_lp, out);
+          if (out) sprintf(out, "%s", sign_lp);
           length += strlen(sign_lp);
-          //if (out) fprintf(out, "%s ", ps->dreal_sat_var_to_str(LIT2IDX (*p)));
+          //if (out) sprintf(out, "%s ", ps->dreal_sat_var_to_str(LIT2IDX (*p)));
           //length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (*p))) + 1;
-          if (out) fprintf (out, "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (*p)));
+          if (out) sprintf (out, "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (*p)));
           length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (*p))) + 1;
         }
     }
 
-    if (out) fputc ('0', out);
+    if (out) sprintf (out, "%s", "0");
     return length + 1;
 }
 
-static size_t printcls(PS * ps, Cls * c, FILE * out) {
+static size_t printcls(PS * ps, Cls * c, char* out) {
     Lit **end;
 
     if (c) {
         end = end_of_lits(c);
         return printlits(ps, c->lits, end, out);
     }
-    else {if (out) fputs("DECISION", out); return strlen("DECISION");}
+    else {if (out) sprintf(out, "DECISION"); return strlen("DECISION");}
 }
 
 /* This function seems useless at the end
@@ -2711,10 +2711,10 @@ REENTER:
       length = printcls(ps, res, NULL);
       char* clstring = NULL;
       clstring = malloc((length + 1) * sizeof(char));
-      FILE* clstringout = fmemopen(clstring, length + 1, "w");
-      printcls(ps, res, clstringout);
-      fflush(clstringout);
-      fclose(clstringout);
+      //FILE* clstringout = fmemopen(clstring, length + 1, "w");
+      printcls(ps, res, clstring);
+      //fflush(clstringout);
+      //fclose(clstringout);
       assert(length != strlen(clstring));
       ps->smts_add_learned_clause(clstring);
       //printf("LEARNED CLSTRING: %s\n", clstring);
