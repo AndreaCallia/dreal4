@@ -1,1 +1,1 @@
-/data/projects/dreal4/smts/sat_solver.cc
+/Users/andrea/projects/dreal4/smts/sat_solver.cc

@@ -1,0 +1,10 @@
+prefix=/usr/local/opt/dreal/4.18.05.2
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: dReal
+Description: SMT Solver for Nonlinear Theories
+Version: 4.18.05.2
+Requires: ibex, nlopt
+Libs: -L${libdir} -ldreal
+Cflags: -I${includedir}
