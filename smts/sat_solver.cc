@@ -187,7 +187,7 @@ void SatSolver::SetSmtsCallbacks(function<void(vector<string> &)> lemma_push, fu
     this->lemma_pull = lemma_pull;
 
     tramp_SatSolver_ptr = this;
-    //picosat_set_smts_callbacks(getPicosat(), TrampDoSmtsPush, TrampDoSmtsPull, TrampSatVarToId, TrampIdToSatVar, TrampSatVarToStr, TrampStrToSatVar, TrampSmtsAddLearnedClause);
+    picosat_set_smts_callbacks(getPicosat(), TrampDoSmtsPush, TrampDoSmtsPull, TrampSatVarToId, TrampIdToSatVar, TrampSatVarToStr, TrampStrToSatVar, TrampSmtsAddLearnedClause);
 }
 
 
