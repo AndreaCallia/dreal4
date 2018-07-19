@@ -1,5 +1,8 @@
 #!/bin/bash
 
+rm -f dreal/solver/sat_solver.cc
+cp smts/sat_solver_prepatch.cc dreal/solver/sat_solver.cc
+[[ "$?" != 0 ]] && { echo "Failed copying prepatch files" ; exit 1 ; }
 bazel build //...
 [[ "$?" != 0 ]] && { echo "Failed initial build" ; exit 1 ; }
 # && bazel build //:package_debian
