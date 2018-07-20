@@ -2403,6 +2403,8 @@ void printclstream(PS *ps, Cls *res, FILE *file) {
   fprintf(file, "%s\n", clstring);
 }
 
+size_t lclauses = 0;
+
 static Cls *
 add_simplified_clause (PS * ps, int learned)
 {
@@ -2705,8 +2707,8 @@ REENTER:
 #endif
 
   if (learned /*&& (res->size < 5) */) {
-      printf("LEARNED CLAUSE: ");
-      printclstream(ps, res, stdout);
+      printf("\rLEARNED CLAUSES: %lu\n", ++lclauses);
+      //printclstream(ps, res, stdout);
       //printclsnl(ps, res, stdout);
       size_t length = 0;
       length = printcls(ps, res, NULL);
