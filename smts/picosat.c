@@ -1474,15 +1474,6 @@ new_clause (PS * ps, unsigned size, unsigned learned)
       *p = ps->cinc;
     }
 
-
-/*
-  if (learned) {
-      printf("LEARNED CLAUSE: ");
-      printclsnl(ps, res, stdout);
-
-  }
-*/
-
   return res;
 }
 
@@ -2403,6 +2394,15 @@ write_rup_header (PS * ps, FILE * file)
   fflush (file);
 }
 
+void printclstream(PS *ps, Cls *res, FILE *file) {
+  char* clstring;
+  size_t clength = printcls(ps, res, NULL);
+  printf ("clength = %lu", clength);
+  clstring = malloc(clength * sizeof(char));
+  printcls(ps, res, clstring);
+  //fprintf(file, "%s\n", clstring);
+}
+
 static Cls *
 add_simplified_clause (PS * ps, int learned)
 {
@@ -2704,8 +2704,9 @@ REENTER:
     resetimpl (ps);
 #endif
 
-  if (learned && (res->size < 5)) {
-      //printf("LEARNED CLAUSE: ");
+  if (learned /*&& (res->size < 5) */) {
+      printf("LEARNED CLAUSE: ");
+      printclstream(ps, res, stdout);
       //printclsnl(ps, res, stdout);
       size_t length = 0;
       length = printcls(ps, res, NULL);
