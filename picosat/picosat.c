@@ -1124,13 +1124,13 @@ static size_t printlits (PS * ps, Lit ** l, Lit ** end, char * out) {
     {
         char sign_l0[2] = "";
         if (LIT2INT (l[0]) < 0) {sign_l0[0] = '-'; sign_l0[1] = '\0';}
-        if (out) sprintf(out, "%s", sign_l0);
+        if (out) sprintf(&out[length], "%s", sign_l0);
         length += strlen(sign_l0);
-        //if (out) sprintf (out, "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[0])));
+        //if (out) sprintf (&out[length], "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[0])));
         //length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (l[0]))) + 1;
-        //DEBUG: if (out) sprintf (out, "{%lu}", ps->dreal_sat_var_to_id(LIT2IDX (l[0])));
+        //DEBUG: if (out) sprintf (&out[length], "{%lu}", ps->dreal_sat_var_to_id(LIT2IDX (l[0])));
         //DEBUG: length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (l[0]))) + 2;
-        if (out) sprintf (out, "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[0])));
+        if (out) sprintf (&out[length], "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[0])));
         length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (l[0]))) + 1;
     }
     else
@@ -1139,33 +1139,33 @@ static size_t printlits (PS * ps, Lit ** l, Lit ** end, char * out) {
         first = (abs (LIT2INT (l[0])) > abs (LIT2INT (l[1])));
         char sign_lf[2] = "";
         if (LIT2INT (l[first]) < 0) {sign_lf[0] = '-'; sign_lf[1] = '\0';}
-        if (out) sprintf(out, "%s", sign_lf);
+        if (out) sprintf(&out[length], "%s", sign_lf);
         length += strlen(sign_lf);
-        //if (out) sprintf (out, "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[first])));
+        //if (out) sprintf (&out[length], "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[first])));
         //length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (l[first]))) + 1;
-        if (out) sprintf (out, "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[first])));
+        if (out) sprintf (&out[length], "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[first])));
         length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (l[first]))) + 1;
         char sign_lnf[2] = "";
         if (LIT2INT (l[!first]) < 0) {sign_lnf[0] = '-'; sign_lnf[1] = '\0';}
-        if (out) sprintf(out, "%s", sign_lnf);
+        if (out) sprintf(&out[length], "%s", sign_lnf);
         length += strlen(sign_lnf);
-        //if (out) sprintf (out, "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[!first])));
+        //if (out) sprintf (&out[length], "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[!first])));
         //length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (l[!first]))) + 1;
-        if (out) sprintf (out, "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[!first])));
+        if (out) sprintf (&out[length], "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[!first])));
         length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (l[!first]))) + 1;
         for (p = l + 2; p < end; p++) {
           char sign_lp[2] = "";
           if (LIT2INT (*p) < 0) {sign_lp[0] = '-'; sign_lp[1] = '\0';}
-          if (out) sprintf(out, "%s", sign_lp);
+          if (out) sprintf(&out[length], "%s", sign_lp);
           length += strlen(sign_lp);
-          //if (out) sprintf(out, "%s ", ps->dreal_sat_var_to_str(LIT2IDX (*p)));
+          //if (out) sprintf(&out[length], "%s ", ps->dreal_sat_var_to_str(LIT2IDX (*p)));
           //length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (*p))) + 1;
-          if (out) sprintf (out, "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (*p)));
+          if (out) sprintf (&out[length], "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (*p)));
           length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (*p))) + 1;
         }
     }
 
-    if (out) sprintf (out, "%s", "0");
+    if (out) sprintf (&out[length], "%s", "0");
     return length + 1;
 }
 
