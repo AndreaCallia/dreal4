@@ -2144,6 +2144,7 @@ assign_forced (PS * ps, Lit * lit, Cls * reason)
 
   if (!ps->LEVEL)
     fixvar (ps, v);
+
 }
 
 #ifdef NO_BINARY_CLAUSES
@@ -2706,8 +2707,8 @@ REENTER:
     resetimpl (ps);
 #endif
 
-  if (learned /*&& (res->size < 5) */) {
-      printf("\rLEARNED CLAUSES: %lu\n", ++lclauses);
+  if (learned && ps->smts_add_learned_clause /*&& (res->size < 5) */) {
+      //printf("\rLEARNED CLAUSES: %lu\n", ++lclauses);
       //printclstream(ps, res, stdout);
       //printclsnl(ps, res, stdout);
       size_t length = 0;
@@ -4475,8 +4476,11 @@ bcp (PS * ps)
   if (ps->mtcls)
     return;
 
+  size_t it = 0;
   for (;;)
     {
+        it = it + 1;
+        //printf("BCP Iteration: %lu\n", it);
       if (ps->ttail2 < ps->thead)	/* prioritize implications */
 	{
 	  props++;
@@ -6079,17 +6083,21 @@ sat (PS * ps, int l)
 
   const size_t period = 50; //it was 1000
 
+  size_t it = 0;
   for (;;)
     {
+      it = it + 1;
+      /* if (it >= 109) */ printf("Iteration: %lu\n", it);
+
       //printf ("adecidelevel  = %d, conflicts = %d , conflicts_lu = %d\n", ps->adecidelevel, ps->conflicts, ps->conflicts_last_update);
       if (ps->conflicts % period == 0) {
           if (ps->smts_do_smts_push) {
             //DEBUG: printf("Gonna call lemma_push(): conflicts = %d\n", ps->conflicts);
-            ps->smts_do_smts_push();
+            //ps->smts_do_smts_push();
           }
       }
       if (ps->adecidelevel == 0 && ps->conflicts > ps->conflicts_last_update + period) {
-          if (ps->smts_do_smts_pull) ps->smts_do_smts_pull(ps);
+          //if (ps->smts_do_smts_pull) ps->smts_do_smts_pull(ps);
           //ps->smts_pull(ps);
           ps->conflicts_last_update = ps->conflicts;
       }

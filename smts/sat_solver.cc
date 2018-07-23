@@ -254,6 +254,7 @@ class SatSolverStat : public Stat {
 }  // namespace
 
 std::experimental::optional<SatSolver::Model> SatSolver::CheckSat() {
+  cout << "Entered in CheckSat()" << endl;
   /*DEBUG
   cout << "VALUES OF MAP:" << endl;
   auto myMap = sat_var_to_id_;
