@@ -19,7 +19,7 @@ namespace dreal {
 using std::cout;
 using std::experimental::optional;
 using std::numeric_limits;
-using std::unordered_set;
+using std::set;
 using std::vector;
 
 TheorySolver::TheorySolver(const Config& config)
@@ -196,7 +196,7 @@ const Box& TheorySolver::GetModel() const {
   return model_;
 }
 
-const unordered_set<Formula>& TheorySolver::GetExplanation() const {
+const set<Formula>& TheorySolver::GetExplanation() const {
   return explanation_;
 }
 
