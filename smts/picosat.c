@@ -6082,7 +6082,7 @@ sat (PS * ps, int l)
   backtracked = 0;
 
   const size_t period = 50; //it was 1000
-    
+
   for (;;)
     {
       //printf ("adecidelevel  = %d, conflicts = %d , conflicts_lu = %d\n", ps->adecidelevel, ps->conflicts, ps->conflicts_last_update);

@@ -12,7 +12,7 @@ namespace dreal {
 
 using std::cout;
 using std::experimental::optional;
-using std::unordered_set;
+using std::set;
 using std::vector;
 
 SatSolver::SatSolver() : sat_{picosat_init()} {
@@ -210,7 +210,7 @@ void SatSolver::AddFormulas(const vector<Formula>& formulas) {
   }
 }
 
-void SatSolver::AddLearnedClause(const unordered_set<Formula>& formulas) {
+void SatSolver::AddLearnedClause(const set<Formula>& formulas) {
   for (const Formula& f : formulas) {
     AddLiteral(!predicate_abstractor_.Convert(f));
   }

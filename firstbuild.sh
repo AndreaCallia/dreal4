@@ -6,6 +6,8 @@ cp smts/sat_solver_prepatch.cc dreal/solver/sat_solver.cc
 bazel build //...
 [[ "$?" != 0 ]] && { echo "Failed initial build" ; exit 1 ; }
 # && bazel build //:package_debian
+./bazel2cmakelists --target //...
+[[ "$?" != 0 ]] && { >&2 echo "Failed creatng file CMakeLists.txt" ; exit 11 ; }
 PICOSATDIR=$(dirname $(readlink bazel-dreal4/external/picosat/picosat.c))
 [[ "$?" != 0 ]] && { >&2 echo "Failed getting picosat path" ; exit 2 ; }
 [[ $PICOSATDIR == "" ]] && { >&2 echo "Failed getting picosat path" ; exit 3 ; }
@@ -23,6 +25,4 @@ ln -s `pwd`/smts/sat_solver.cc dreal/solver/sat_solver.cc
 [[ "$?" != 0 ]] && { >&2 echo "Failed linking patched sat_solver.cc" ; exit 9 ; }
 bazel build //...
 [[ "$?" != 0 ]] && { >&2 echo "Failed build after patching" ; exit 10 ; }
-./bazel2cmakelists --target //...
-[[ "$?" != 0 ]] && { >&2 echo "Failed creatng file CMakeLists.txt" ; exit 11 ; }
 echo "First build completed."
