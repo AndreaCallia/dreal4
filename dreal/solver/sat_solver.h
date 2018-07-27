@@ -21,6 +21,11 @@ namespace dreal {
 
 class SatSolver {
  public:
+
+  static const std::vector<std::string> SmtsParameters;
+
+  void SmtsSetParameters(std::map<string, string> params);
+
   using Literal = std::pair<Variable, bool>;
 
   // Boolean model + Theory model.
@@ -97,6 +102,9 @@ class SatSolver {
   function<void(vector<string> &)> lemma_pull;
 
  private:
+
+  smts_params smtsParams;
+
   // Adds a formula @p f to the solver.
   //
   // @pre @p f is a clause. That is, it is either a literal (b or ¬b)

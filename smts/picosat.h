@@ -223,6 +223,16 @@ void picosat_save_original_clauses (PicoSAT *);
 //void set_lemma_push(PicoSAT* ps, void (*lemmapush)());
 //void set_lemma_pull(PicoSAT* ps, void (*lemmapull)());
 
+typedef struct {
+	size_t conflicts;
+	float naivestep;
+	size_t lcwidth;
+} SMTSparams;
+
+typedef SMTSparams* smts_params;
+
+void picosat_set_smts_params(PicoSAT* ps, smts_params params);
+
 void picosat_set_smts_callbacks(PicoSAT* ps,
                        void (*do_smts_push_ptr)(),
                        void (*do_smts_pull_ptr)(PicoSAT*),

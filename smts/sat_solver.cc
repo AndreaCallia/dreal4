@@ -7,6 +7,7 @@
 #include "dreal/util/exception.h"
 #include "dreal/util/logging.h"
 #include "dreal/util/stat.h"
+#include "sat_solver.h"
 
 namespace dreal {
 
@@ -14,6 +15,8 @@ using std::cout;
 using std::experimental::optional;
 using std::set;
 using std::vector;
+
+const vector<string> SatSolver::SmtsParameters  = {"conflicts", "naivestep", "lcwidth"};
 
 SatSolver::SatSolver() : sat_{picosat_init()} {
   // Enable partial checks via picosat_deref_partial. See the call-site in
@@ -187,6 +190,7 @@ void SatSolver::SetSmtsCallbacks(function<void(vector<string> &)> lemma_push, fu
     this->lemma_pull = lemma_pull;
 
     tramp_SatSolver_ptr = this;
+    picosat_set_smts_params(getPicosat(), smtsParams);
     picosat_set_smts_callbacks(getPicosat(), TrampDoSmtsPush, TrampDoSmtsPull, TrampSatVarToId, TrampIdToSatVar, TrampSatVarToStr, TrampStrToSatVar, TrampSmtsAddLearnedClause);
 }
 
@@ -252,6 +256,24 @@ class SatSolverStat : public Stat {
   int num_check_sat_{0};
 };
 }  // namespace
+
+void SatSolver::SmtsSetParameters(std::map<string, string> params) {
+    assert((
+              params.count("conflicts")
+              + params.count("naivestep")
+              + params.count("lcwidth")
+           ) == 3);
+    smtsParams = static_cast<smts_params>(malloc(sizeof(SMTSparams)));
+    stringstream conflicts(params["conflicts"]);
+    stringstream naivestep(params["naivestep"]);
+    stringstream lcwidth(params["lcwidth"]);
+    conflicts >> smtsParams->conflicts;
+    naivestep >> smtsParams->naivestep;
+    lcwidth >> smtsParams->lcwidth;
+    assert(smtsParams->conflicts > 0);
+    assert(smtsParams->naivestep >= 0);
+    assert(smtsParams->lcwidth > 0);
+  }
 
 std::experimental::optional<SatSolver::Model> SatSolver::CheckSat() {
   /*DEBUG

@@ -739,6 +739,7 @@ struct PicoSAT
   void (*smts_add_learned_clause)(char* c);
   void (*smts_do_smts_push)();
   void (*smts_do_smts_pull)(PicoSAT*);
+  smts_params smtsParams;
 };
 
 typedef PicoSAT PS;
@@ -8671,6 +8672,11 @@ picosat_deref_partial (PS * ps, int int_lit)
     minautarky (ps);
 
   return pderef (ps, int_lit);
+}
+
+void picosat_set_smts_params(PicoSAT* ps,
+                             smts_params params) {
+    ps->smtsParams = params;
 }
 
 void picosat_set_smts_callbacks(PicoSAT* ps,
