@@ -224,14 +224,13 @@ void picosat_save_original_clauses (PicoSAT *);
 //void set_lemma_pull(PicoSAT* ps, void (*lemmapull)());
 
 typedef struct {
-	size_t conflicts;
-	float naivestep;
-	size_t lcwidth;
-} SMTSparams;
+	int conflicts;
+	int lcwidth;
+} SMTSpicosatparams;
 
-typedef SMTSparams* smts_params;
+typedef SMTSpicosatparams* smts_picosat_params;
 
-void picosat_set_smts_params(PicoSAT* ps, smts_params params);
+void picosat_set_smts_params(PicoSAT* ps, smts_picosat_params params);
 
 void picosat_set_smts_callbacks(PicoSAT* ps,
                        void (*do_smts_push_ptr)(),
@@ -242,6 +241,16 @@ void picosat_set_smts_callbacks(PicoSAT* ps,
                        int (*str_to_sat_var_ptr)(const char*),
                        void (*add_learned_clause_ptr)(char*)
 );
+
+int picosat_stat_original(PicoSAT* ps);
+
+int picosat_stat_added_original(PicoSAT* ps);
+
+int picosat_stat_learned(PicoSAT* ps);
+
+int picosat_stat_conflicts(PicoSAT* ps);
+
+int picosat_stat_decisions(PicoSAT* ps);
 
 /* Add a call back which is checked regularly to notify the SAT solver
  * to terminate earlier.  This is useful for setting external time limits

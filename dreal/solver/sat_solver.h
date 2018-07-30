@@ -19,12 +19,20 @@ using namespace std;
 
 namespace dreal {
 
+  typedef struct {
+    int seed;
+    int conflicts;
+    int lcwidth;
+  } SMTSdrealparams;
+
+  typedef SMTSdrealparams* smts_dreal_params;
+
 class SatSolver {
  public:
 
-  static const std::vector<std::string> SmtsParameters;
+  std::map<string, int> SmtsNumStats;
 
-  void SmtsSetParameters(std::map<string, string> params);
+  void SmtsSetParameters(smts_dreal_params params);
 
   using Literal = std::pair<Variable, bool>;
 
@@ -103,7 +111,8 @@ class SatSolver {
 
  private:
 
-  smts_params smtsParams;
+  smts_dreal_params smtsDrealParams = nullptr;
+  smts_picosat_params smtsPicosatParams = nullptr;
 
   // Adds a formula @p f to the solver.
   //

@@ -16,8 +16,6 @@ using std::experimental::optional;
 using std::set;
 using std::vector;
 
-const vector<string> SatSolver::SmtsParameters  = {"conflicts", "naivestep", "lcwidth"};
-
 SatSolver::SatSolver() : sat_{picosat_init()} {
   // Enable partial checks via picosat_deref_partial. See the call-site in
   // SatSolver::CheckSat().
@@ -190,7 +188,7 @@ void SatSolver::SetSmtsCallbacks(function<void(vector<string> &)> lemma_push, fu
     this->lemma_pull = lemma_pull;
 
     tramp_SatSolver_ptr = this;
-    picosat_set_smts_params(getPicosat(), smtsParams);
+    picosat_set_smts_params(getPicosat(), smtsPicosatParams);
     picosat_set_smts_callbacks(getPicosat(), TrampDoSmtsPush, TrampDoSmtsPull, TrampSatVarToId, TrampIdToSatVar, TrampSatVarToStr, TrampStrToSatVar, TrampSmtsAddLearnedClause);
 }
 
@@ -257,22 +255,15 @@ class SatSolverStat : public Stat {
 };
 }  // namespace
 
-void SatSolver::SmtsSetParameters(std::map<string, string> params) {
-    assert((
-              params.count("conflicts")
-              + params.count("naivestep")
-              + params.count("lcwidth")
-           ) == 3);
-    smtsParams = static_cast<smts_params>(malloc(sizeof(SMTSparams)));
-    stringstream conflicts(params["conflicts"]);
-    stringstream naivestep(params["naivestep"]);
-    stringstream lcwidth(params["lcwidth"]);
-    conflicts >> smtsParams->conflicts;
-    naivestep >> smtsParams->naivestep;
-    lcwidth >> smtsParams->lcwidth;
-    assert(smtsParams->conflicts > 0);
-    assert(smtsParams->naivestep >= 0);
-    assert(smtsParams->lcwidth > 0);
+void SatSolver::SmtsSetParameters(smts_dreal_params params) {
+    smtsDrealParams = params;
+    assert(params->lcwidth > 0);
+    assert(params->conflicts > 0);
+    smtsPicosatParams = static_cast<smts_picosat_params>(malloc(sizeof(SMTSpicosatparams)));
+    smtsPicosatParams->lcwidth = params->lcwidth;
+    smtsPicosatParams->conflicts = params->conflicts;
+    //DEBUG: cout << "lcwidth should be: " << smtsPicosatParams->lcwidth << endl;
+    picosat_set_smts_params(getPicosat(), smtsPicosatParams);
   }
 
 std::experimental::optional<SatSolver::Model> SatSolver::CheckSat() {
@@ -289,15 +280,12 @@ std::experimental::optional<SatSolver::Model> SatSolver::CheckSat() {
                   picosat_variables(sat_),
                   picosat_added_original_clauses(sat_));
   stat.num_check_sat_++;
-  // Call SAT solver.
-  // auto pull=[&](PicoSAT* s){
-  //  this->pull(s);
-  // };
-  // auto push=[&](PicoSAT* s){
-  //    this->push(s);
-  //};
-  // const int ret{picosat_sat(sat_, -1, pull, push)};
   const int ret{picosat_sat(sat_, -1)};
+  SmtsNumStats["picosat_original"] = picosat_stat_original(sat_);
+  SmtsNumStats["picosat_tlearned"] = picosat_stat_added_original(sat_);
+  SmtsNumStats["picosat_learned"] = picosat_stat_learned(sat_);
+  SmtsNumStats["picosat_conflicts"] = picosat_stat_conflicts(sat_);
+  SmtsNumStats["picosat_decisions"] = picosat_stat_decisions(sat_);
   Model model;
   auto& boolean_model = model.first;
   auto& theory_model = model.second;

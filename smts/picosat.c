@@ -739,7 +739,7 @@ struct PicoSAT
   void (*smts_add_learned_clause)(char* c);
   void (*smts_do_smts_push)();
   void (*smts_do_smts_pull)(PicoSAT*);
-  smts_params smtsParams;
+  smts_picosat_params smtsParams;
 };
 
 typedef PicoSAT PS;
@@ -1401,6 +1401,7 @@ init (void * pmgr,
   ps->dreal_sat_var_to_str = NULL;
   ps->dreal_str_to_sat_var = NULL;
   ps->smts_do_smts_push = NULL;
+  ps->smtsParams = NULL;
   return ps;
 }
 
@@ -2708,8 +2709,10 @@ REENTER:
     resetimpl (ps);
 #endif
 
-  if (learned && ps->smts_add_learned_clause /*&& (res->size < 5) */) {
-      //printf("\rLEARNED CLAUSES: %lu\n", ++lclauses);
+  int rightsize = 1;
+  if (ps->smtsParams) rightsize = (res->size <= ps->smtsParams->lcwidth);
+  if (learned && ps->smts_add_learned_clause && rightsize) {
+      //printf("\rLEARNED CLAUSES: %lu", ++lclauses);
       //printclstream(ps, res, stdout);
       //printclsnl(ps, res, stdout);
       size_t length = 0;
@@ -4477,11 +4480,8 @@ bcp (PS * ps)
   if (ps->mtcls)
     return;
 
-  size_t it = 0;
   for (;;)
     {
-        it = it + 1;
-        //printf("BCP Iteration: %lu\n", it);
       if (ps->ttail2 < ps->thead)	/* prioritize implications */
 	{
 	  props++;
@@ -6082,20 +6082,23 @@ sat (PS * ps, int l)
   ps->isimplify = ps->fixed;
   backtracked = 0;
 
-  const size_t period = 50; //it was 1000
+  int period = 50; //it was 1000
+
+  if (ps->smtsParams) period = ps->smtsParams->conflicts;
+
+  assert(period > 0);
 
   for (;;)
     {
       //printf ("adecidelevel  = %d, conflicts = %d , conflicts_lu = %d\n", ps->adecidelevel, ps->conflicts, ps->conflicts_last_update);
       if (ps->conflicts % period == 0) {
           if (ps->smts_do_smts_push) {
-            //DEBUG: printf("Gonna call lemma_push(): conflicts = %d\n", ps->conflicts);
-            //ps->smts_do_smts_push();
+            //DEBUG: printf("Gonna call lemma_push(): conflicts = %d, period = %lu\n", ps->conflicts, period);
+            ps->smts_do_smts_push();
           }
       }
       if (ps->adecidelevel == 0 && ps->conflicts > ps->conflicts_last_update + period) {
-          //if (ps->smts_do_smts_pull) ps->smts_do_smts_pull(ps);
-          //ps->smts_pull(ps);
+          if (ps->smts_do_smts_pull) ps->smts_do_smts_pull(ps);
           ps->conflicts_last_update = ps->conflicts;
       }
       if (!ps->conflict)
@@ -8675,7 +8678,7 @@ picosat_deref_partial (PS * ps, int int_lit)
 }
 
 void picosat_set_smts_params(PicoSAT* ps,
-                             smts_params params) {
+                             smts_picosat_params params) {
     ps->smtsParams = params;
 }
 
@@ -8695,3 +8698,24 @@ void picosat_set_smts_callbacks(PicoSAT* ps,
   ps->smts_do_smts_push = do_smts_push_ptr;
   ps->smts_do_smts_pull = do_smts_pull_ptr;
 }
+
+int picosat_stat_original(PicoSAT* ps) {
+  return ps->noclauses;
+}
+
+int picosat_stat_added_original(PicoSAT* ps) {
+  return ps->oadded;
+}
+
+int picosat_stat_learned(PicoSAT* ps) {
+  return ps->nlclauses;
+}
+
+int picosat_stat_conflicts(PicoSAT* ps) {
+  return ps->conflicts;
+}
+
+int picosat_stat_decisions(PicoSAT* ps) {
+  return ps->decisions;
+}
+
