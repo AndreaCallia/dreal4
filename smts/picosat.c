@@ -1127,8 +1127,9 @@ static size_t printlits (PS * ps, Lit ** l, Lit ** end, char * out) {
         if (LIT2INT (l[0]) < 0) {sign_l0[0] = '-'; sign_l0[1] = '\0';}
         if (out) sprintf(&out[length], "%s", sign_l0);
         length += strlen(sign_l0);
-        //if (out) sprintf (&out[length], "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[0])));
-        //length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (l[0]))) + 1;
+        if (ps->smtsParams->verbosity >= 5) {if (out) sprintf (&out[length], "%s:", ps->dreal_sat_var_to_str(LIT2IDX (l[0])));
+        length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (l[0]))) + 1;}
+        //printf("The name of variable is: %s\n", ps->dreal_sat_var_to_str(LIT2IDX (l[0])));
         //DEBUG: if (out) sprintf (&out[length], "{%lu}", ps->dreal_sat_var_to_id(LIT2IDX (l[0])));
         //DEBUG: length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (l[0]))) + 2;
         if (out) sprintf (&out[length], "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[0])));
@@ -1142,16 +1143,17 @@ static size_t printlits (PS * ps, Lit ** l, Lit ** end, char * out) {
         if (LIT2INT (l[first]) < 0) {sign_lf[0] = '-'; sign_lf[1] = '\0';}
         if (out) sprintf(&out[length], "%s", sign_lf);
         length += strlen(sign_lf);
-        //if (out) sprintf (&out[length], "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[first])));
-        //length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (l[first]))) + 1;
+        if (ps->smtsParams->verbosity >= 5) {if (out) sprintf (&out[length], "%s:", ps->dreal_sat_var_to_str(LIT2IDX (l[first])));
+        length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (l[first]))) + 1;}
+        //printf("The name of variable is: %s\n", ps->dreal_sat_var_to_str(LIT2IDX (l[first])));
         if (out) sprintf (&out[length], "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[first])));
         length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (l[first]))) + 1;
         char sign_lnf[2] = "";
         if (LIT2INT (l[!first]) < 0) {sign_lnf[0] = '-'; sign_lnf[1] = '\0';}
         if (out) sprintf(&out[length], "%s", sign_lnf);
         length += strlen(sign_lnf);
-        //if (out) sprintf (&out[length], "%s ", ps->dreal_sat_var_to_str(LIT2IDX (l[!first])));
-        //length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (l[!first]))) + 1;
+        if (ps->smtsParams->verbosity >= 5) {if (out) sprintf (&out[length], "%s:", ps->dreal_sat_var_to_str(LIT2IDX (l[!first])));
+        length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (l[!first]))) + 1;}
         if (out) sprintf (&out[length], "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (l[!first])));
         length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (l[!first]))) + 1;
         for (p = l + 2; p < end; p++) {
@@ -1159,9 +1161,10 @@ static size_t printlits (PS * ps, Lit ** l, Lit ** end, char * out) {
           if (LIT2INT (*p) < 0) {sign_lp[0] = '-'; sign_lp[1] = '\0';}
           if (out) sprintf(&out[length], "%s", sign_lp);
           length += strlen(sign_lp);
-          //if (out) sprintf(&out[length], "%s ", ps->dreal_sat_var_to_str(LIT2IDX (*p)));
-          //length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (*p))) + 1;
-          if (out) sprintf (&out[length], "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (*p)));
+          if (ps->smtsParams->verbosity >= 5) {if (out) sprintf(&out[length], "%s:", ps->dreal_sat_var_to_str(LIT2IDX (*p)));
+          length += strlen(ps->dreal_sat_var_to_str(LIT2IDX (*p))) + 1;}
+          //printf("The name of variable is: %s\n", ps->dreal_sat_var_to_str(LIT2IDX (*p)));
+          if (out) sprintf(&out[length], "%lu ", ps->dreal_sat_var_to_id(LIT2IDX (*p)));
           length += numlen(ps->dreal_sat_var_to_id(LIT2IDX (*p))) + 1;
         }
     }
@@ -2712,8 +2715,9 @@ REENTER:
   int rightsize = 1;
   if (ps->smtsParams) rightsize = (res->size <= ps->smtsParams->lcwidth);
   if (learned && ps->smts_add_learned_clause && rightsize) {
-      //printf("\rLEARNED CLAUSES: %lu", ++lclauses);
-      //printclstream(ps, res, stdout);
+      int verb = (ps->smtsParams)?ps->smtsParams->verbosity:0;
+      if (verb >= 2) printf("LEARNED CLAUSES: %lu\n", ++lclauses);
+      if (verb >= 4) printclstream(ps, res, stdout);
       //printclsnl(ps, res, stdout);
       size_t length = 0;
       length = printcls(ps, res, NULL);

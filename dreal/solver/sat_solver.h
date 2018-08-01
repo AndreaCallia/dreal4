@@ -15,12 +15,15 @@
 #include "dreal/util/predicate_abstractor.h"
 #include "dreal/util/tseitin_cnfizer.h"
 
+#include <random>
+
 using namespace std;
 
 namespace dreal {
 
   typedef struct {
-    int seed;
+    int verbosity;
+    unsigned int seed;
     int conflicts;
     int lcwidth;
   } SMTSdrealparams;
@@ -114,6 +117,9 @@ class SatSolver {
   smts_dreal_params smtsDrealParams = nullptr;
   smts_picosat_params smtsPicosatParams = nullptr;
 
+  std::default_random_engine *random_generator;
+  std::uniform_int_distribution<int> *random_distribution;
+
   // Adds a formula @p f to the solver.
   //
   // @pre @p f is a clause. That is, it is either a literal (b or ¬b)
@@ -155,6 +161,9 @@ class SatSolver {
   // Map symbolic ID → int (Variable type in PicoSat).
   std::unordered_map<size_t, int> id_to_sat_var_;
 
+  // Map symbolic ID → symbolic::Variable
+  std::unordered_map<size_t, Variable> id_to_sym_var;
+
   // Map int (Variable type in PicoSat) → symbolic ID.
   std::unordered_map<int, size_t> sat_var_to_id_;
 
@@ -177,6 +186,8 @@ class SatSolver {
 
   std::map<char*, bool> sent_clauses;
   std::set<string> received_clauses;
+
+  //void SmtsAddTheoryClause(const set<Formula>& formulas);
 
 };
 

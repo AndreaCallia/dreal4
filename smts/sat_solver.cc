@@ -63,8 +63,14 @@ SatSolver::~SatSolver() { picosat_reset(sat_); }
   }
 
   const char* SatSolver::SatVarToStr(int x) {
-    if (x < 0) return ("-" + to_sym_var_[-x].get_name()).c_str();
-    return to_sym_var_[x].get_name().c_str();
+    if (smtsDrealParams->verbosity >= 5) {
+        stringstream temp;
+        temp << "[" << x << "]" << to_sym_var_[x].get_name();
+        return strdup(temp.str().c_str());
+    }
+    //if (x >= 0) cout << "[SatSolver] The name of the variable is: " << to_sym_var_[x].get_name().c_str() << endl;
+    //if (x < 0) return ("-" + to_sym_var_[-x].get_name()).c_str();
+    return strdup(to_sym_var_[x].get_name().c_str());
   }
 
   const char* TrampSatVarToStr(int x) {
@@ -212,6 +218,33 @@ void SatSolver::AddFormulas(const vector<Formula>& formulas) {
   }
 }
 
+//void SatSolver::SmtsAddTheoryClause(const set<Formula>& formulas) {
+//  std::stringstream clstream;
+//  for (const Formula& f : formulas) {
+//    DREAL_ASSERT(is_variable(f) ||
+//                 (is_negation(f) && is_variable(get_operand(f))));
+//    if (is_variable(f)) {
+//      // f = b
+//      const Variable& var{get_variable(f)};
+//      DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
+//      // Add l = b
+//      clstream << /*to_sat_var_[var]*/ /* var.get_name() */ 5 << " ";
+//    } else {
+//      // f = ¬b
+//      DREAL_ASSERT(is_negation(f) && is_variable(get_operand(f)));
+//      const Variable& var{get_variable(get_operand(f))};
+//      DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
+//      // Add l = ¬b
+//      clstream << "-" << /*to_sat_var_[var]*/ /* var.get_name() */ 5 << " ";
+//    }
+//  }
+//  clstream << "0";
+//  char* clchar = strdup(clstream.str().c_str());
+//  if (smtsDrealParams->verbosity >= 2) cout << "LEARNED THEORY CLAUSE " << endl;
+//  if (smtsDrealParams->verbosity >= 4) cout << clchar << endl;
+//  SmtsAddLearnedClause(clchar);
+//  }
+
 void SatSolver::AddLearnedClause(const set<Formula>& formulas) {
   for (const Formula& f : formulas) {
     AddLiteral(!predicate_abstractor_.Convert(f));
@@ -257,11 +290,15 @@ class SatSolverStat : public Stat {
 
 void SatSolver::SmtsSetParameters(smts_dreal_params params) {
     smtsDrealParams = params;
+    assert(params->verbosity >= 0);
     assert(params->lcwidth > 0);
     assert(params->conflicts > 0);
     smtsPicosatParams = static_cast<smts_picosat_params>(malloc(sizeof(SMTSpicosatparams)));
+    smtsPicosatParams->verbosity = params->verbosity;
     smtsPicosatParams->lcwidth = params->lcwidth;
     smtsPicosatParams->conflicts = params->conflicts;
+    this->random_generator = new std::default_random_engine(smtsDrealParams->seed);
+    this->random_distribution = new std::uniform_int_distribution<int>(0, 2);
     //DEBUG: cout << "lcwidth should be: " << smtsPicosatParams->lcwidth << endl;
     picosat_set_smts_params(getPicosat(), smtsPicosatParams);
   }
@@ -346,6 +383,8 @@ void SatSolver::AddLiteral(const Formula& f) {
     DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
     // Add l = b
     picosat_add(sat_, to_sat_var_[var]);
+    //if (var.get_name().find("obj") != std::string::npos)
+    //  cout << "{SatSolver} ADDING variable [" << to_sat_var_[var] << "]" << var.get_name() << endl;
   } else {
     // f = ¬b
     DREAL_ASSERT(is_negation(f) && is_variable(get_operand(f)));
@@ -353,6 +392,8 @@ void SatSolver::AddLiteral(const Formula& f) {
     DREAL_ASSERT(var.get_type() == Variable::Type::BOOLEAN);
     // Add l = ¬b
     picosat_add(sat_, -to_sat_var_[var]);
+    //if (var.get_name().find("obj") != std::string::npos)
+    //  cout << "{SatSolver} ADDING variable [" << to_sat_var_[var] << "]" << var.get_name() << endl;
   }
 }
 
@@ -375,12 +416,37 @@ void SatSolver::MakeSatVar(const Variable& var) {
     // Found.
     return;
   }
+
+  std::default_random_engine generator(smtsDrealParams->seed);
+  std::uniform_int_distribution<int> distribution(0, 2);
+
   // It's not in the maps, let's make one and add it.
   const int sat_var{picosat_inc_max_var(sat_)};
 
+  int randval = (*random_distribution)(*random_generator);
+
+  if (randval == 1) {
+      picosat_set_more_important_lit(sat_, (int)sat_var); picosat_set_more_important_lit(sat_, -(int)sat_var);
+  }
+
+  if (randval == 2) {
+      picosat_set_less_important_lit(sat_, (int)sat_var); picosat_set_less_important_lit(sat_, -(int)sat_var);
+  }
+
+  randval = (*random_distribution)(*random_generator);
+
+
+  if (randval == 1) {
+      picosat_set_default_phase_lit(sat_, (int)sat_var, 1); picosat_set_default_phase_lit(sat_, -(int)sat_var, -1);
+  }
+
+  if (randval == 2) {
+      picosat_set_default_phase_lit(sat_, (int)sat_var, -1); picosat_set_default_phase_lit(sat_, -(int)sat_var, 1);
+  }
+
   SMTS_id_count++;
 
-  //printf("Assigning ID %lu (sat_var %d) to variable %s\n", SMTS_id_count, sat_var, var.get_name().c_str());
+  if (smtsDrealParams->verbosity >= 5) printf("Assigning ID %lu (sat_var %d) to variable %s\n", /*SMTS_id_count*/ var.get_id(), sat_var, var.get_name().c_str());
 
   to_sat_var_.emplace_hint(it, var, sat_var);
   //id_to_sat_var_.emplace(SMTS_id_count, sat_var);
@@ -389,6 +455,7 @@ void SatSolver::MakeSatVar(const Variable& var) {
   sat_var_to_id_.emplace(sat_var, var.get_id());
   str_to_sat_var_.emplace(var.get_name().c_str(), sat_var);
   to_sym_var_.emplace(sat_var, var);
+  id_to_sym_var.emplace(var.get_id(), var);
 
   DREAL_LOG_DEBUG("SatSolver::MakeSatVar({} ↦ {})", var, sat_var);
 }

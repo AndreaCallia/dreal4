@@ -224,6 +224,7 @@ void picosat_save_original_clauses (PicoSAT *);
 //void set_lemma_pull(PicoSAT* ps, void (*lemmapull)());
 
 typedef struct {
+    int verbosity;
 	int conflicts;
 	int lcwidth;
 } SMTSpicosatparams;
